@@ -1,9 +1,11 @@
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: sidecar-injector-webhook-cfg
   labels:
     app: sidecar-injector
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
 webhooks:
 - name: sidecar-injector.morven.me
   clientConfig:
@@ -11,7 +13,6 @@ webhooks:
       name: sidecar-injector-webhook-svc
       namespace: sidecar-injector
       path: "/mutate"
-    caBundle: ${CA_BUNDLE}
   rules:
   - operations: ["CREATE", "UPDATE"]
     apiGroups: [""]
@@ -20,3 +21,6 @@ webhooks:
   namespaceSelector:
     matchLabels:
       sidecar-injection: enabled
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  timeoutSeconds: 5

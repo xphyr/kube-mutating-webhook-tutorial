@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: morvencao/sidecar-injector:latest
+          image: quay.io/markd/mutatewh:v1
           imagePullPolicy: IfNotPresent
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
@@ -26,6 +26,9 @@ spec:
           - -alsologtostderr
           - -v=4
           - 2>&1
+          ports:
+          - name: https
+            containerPort: 8443
           volumeMounts:
           - name: webhook-certs
             mountPath: /etc/webhook/certs

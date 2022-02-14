@@ -1,0 +1,116 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRoleBinding
+metadata:
+  name: auth-delegator-mutator
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  namespace: mutating-webhook
+  name: mutator
+
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRole
+metadata:
+  name: system:openshift:online:mutator
+rules:
+- apiGroups:
+  - online.openshift.io
+  resources:
+  - mutationservice  
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRole
+metadata:
+  name: system:openshift:online:mutator
+rules:
+- apiGroups:
+  - admission.online.openshift.io
+  resources:
+  - mutationservice 
+  verbs:
+  - create
+
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRoleBinding
+metadata:
+  name: mutator-mutating-webhook
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:openshift:online:mutator
+subjects:
+- kind: ServiceAccount
+  namespace: mutating-webhook
+  name: mutator
+
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: RoleBinding
+metadata:
+  namespace: kube-system
+  name: extension-mutator-authentication-reader-mutator
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: extension-apimutator-authentication-reader
+subjects:
+- kind: ServiceAccount
+  namespace: mutating-webhook
+  name: mutator
+
+---
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRole
+metadata:
+  name: mutator-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  - mutatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mutator-role
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: mutator-role
+subjects:
+- kind: ServiceAccount
+  namespace: mutating-webhook
+  name: mutator
