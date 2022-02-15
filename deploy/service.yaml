@@ -5,6 +5,8 @@ metadata:
   namespace: sidecar-injector
   labels:
     app: sidecar-injector
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: webhook-certs
 spec:
   ports:
   - port: 443
