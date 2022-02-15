@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"html"
 	"net/http"
 	"os"
 	"os/signal"
@@ -44,6 +45,12 @@ func main() {
 	// define http server and server handler
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", whsvr.serve)
+	mux.HandleFunc("/v1", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	})
 	whsvr.server.Handler = mux
 
 	// start webhook server in new rountine

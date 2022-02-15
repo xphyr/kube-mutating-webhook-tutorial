@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: quay.io/markd/mutatewh:v1
+          image: quay.io/markd/mutatewh:v5
           imagePullPolicy: IfNotPresent
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml

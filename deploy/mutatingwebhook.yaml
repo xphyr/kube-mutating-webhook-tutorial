@@ -7,7 +7,7 @@ metadata:
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
 webhooks:
-- name: sidecar-injector.morven.me
+- name: admission.online.openshift.io
   clientConfig:
     service:
       name: sidecar-injector-webhook-svc
@@ -21,6 +21,6 @@ webhooks:
   namespaceSelector:
     matchLabels:
       sidecar-injection: enabled
-  admissionReviewVersions: ["v1", "v1beta1"]
+  admissionReviewVersions: ["v1"]
   sideEffects: None
   timeoutSeconds: 5

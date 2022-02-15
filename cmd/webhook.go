@@ -285,7 +285,20 @@ func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
 		admissionResponse = whsvr.mutate(&ar)
 	}
 
-	admissionReview := admissionv1.AdmissionReview{}
+	// We need to set the object type and API version
+	admissionReview := admissionv1.AdmissionReview{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AdmissionReview",
+			APIVersion: "admission.k8s.io/v1",
+		},
+		// Response: &admission.AdmissionResponse{
+		//	UID:       review.Request.UID,
+		//	Allowed:   result.Allowed,
+		//	Result:    &meta.Status{Message: result.Msg},
+		//	PatchType: &patchType,
+		//},
+	}
+
 	if admissionResponse != nil {
 		admissionReview.Response = admissionResponse
 		if ar.Request != nil {
@@ -299,6 +312,7 @@ func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
 	}
 	glog.Infof("Ready to write reponse ...")
+	glog.Infof(string(resp))
 	if _, err := w.Write(resp); err != nil {
 		glog.Errorf("Can't write response: %v", err)
 		http.Error(w, fmt.Sprintf("could not write response: %v", err), http.StatusInternalServerError)

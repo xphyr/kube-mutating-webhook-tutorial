@@ -9,7 +9,7 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  namespace: mutating-webhook
+  namespace: sidecar-injector
   name: mutator
 
 ---
@@ -51,7 +51,7 @@ roleRef:
   name: system:openshift:online:mutator
 subjects:
 - kind: ServiceAccount
-  namespace: mutating-webhook
+  namespace: sidecar-injector
   name: mutator
 
 ---
@@ -66,7 +66,7 @@ roleRef:
   name: extension-apimutator-authentication-reader
 subjects:
 - kind: ServiceAccount
-  namespace: mutating-webhook
+  namespace: sidecar-injector
   name: mutator
 
 ---
@@ -112,5 +112,5 @@ roleRef:
   name: mutator-role
 subjects:
 - kind: ServiceAccount
-  namespace: mutating-webhook
+  namespace: sidecar-injector
   name: mutator
