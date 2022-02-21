@@ -1,9 +1,12 @@
 # Kubernetes Mutating Webhook for Sidecar Injection
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/morvencao/kube-mutating-webhook-tutorial)](https://goreportcard.com/report/github.com/morvencao/kube-mutating-webhook-tutorial)
-[![GoDoc](https://godoc.org/github.com/morvencao/kube-mutating-webhook-tutorial?status.svg)](https://godoc.org/github.com/morvencao/kube-mutating-webhook-tutorial)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xphyr/kube-mutating-webhook-tutorial)](https://goreportcard.com/report/github.com/xphyr/kube-mutating-webhook-tutorial)
 
-This tutoral shows how to build and deploy a [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19) that injects a nginx sidecar container into pod prior to persistence of the object.
+This tutorial shows how to build and deploy a [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19) that injects a nginx sidecar container into pod prior to persistence of the object.
+
+## Introduction
+
+First off Credit where Credit is due. This repo is a fork of https://github.com/morvencao/kube-mutating-webhook-tutorial which has been updated to work with more modern releases of Kubernetes, as well as additional information on how to deploy this for OpenShift. Thanks to [morvencao](https://github.com/morvencao) for his original work on this. See [References](#references) for additional information and inspiration for this work.
 
 ## Prerequisites
 
@@ -132,3 +135,6 @@ Sometimes you may find that pod is injected with sidecar container as expected, 
 2. The namespace in which application pod is deployed has the correct labels as configured in `mutatingwebhookconfiguration`.
 3. Check the `caBundle` is patched to `mutatingwebhookconfiguration` object by checking if `caBundle` fields is empty.
 4. Check if the application pod has annotation `sidecar-injector-webhook.morven.me/inject":"yes"`.
+
+
+## References

@@ -5,13 +5,12 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"html"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/golang/glog"
+	"k8s.io/klog/v2"
 )
 
 func main() {
@@ -26,12 +25,12 @@ func main() {
 
 	sidecarConfig, err := loadConfig(parameters.sidecarCfgFile)
 	if err != nil {
-		glog.Errorf("Failed to load configuration: %v", err)
+		klog.Errorf("Failed to load configuration: %v", err)
 	}
 
 	pair, err := tls.LoadX509KeyPair(parameters.certFile, parameters.keyFile)
 	if err != nil {
-		glog.Errorf("Failed to load key pair: %v", err)
+		klog.Errorf("Failed to load key pair: %v", err)
 	}
 
 	whsvr := &WebhookServer{
@@ -45,18 +44,20 @@ func main() {
 	// define http server and server handler
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", whsvr.serve)
-	mux.HandleFunc("/v1", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
+	// In order to use an apiserver the root of the app must respond with a 200 or it doesn't pass
+	// the health test and become active
+	// mux.HandleFunc("/v1", func(w http.ResponseWriter, r *http.Request) {
+	// 	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	// })
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+		fmt.Fprintf(w, "")
 	})
 	whsvr.server.Handler = mux
 
 	// start webhook server in new rountine
 	go func() {
 		if err := whsvr.server.ListenAndServeTLS("", ""); err != nil {
-			glog.Errorf("Failed to listen and serve webhook server: %v", err)
+			klog.Errorf("Failed to listen and serve webhook server: %v", err)
 		}
 	}()
 
@@ -65,6 +66,9 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 
-	glog.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
-	whsvr.server.Shutdown(context.Background())
+	klog.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
+	err = whsvr.server.Shutdown(context.Background())
+	if err != nil {
+		klog.Errorf("Failed to cleanly shutdown server: %v", err)
+	}
 }

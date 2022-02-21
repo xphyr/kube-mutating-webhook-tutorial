@@ -11,7 +11,7 @@ require (
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
-	k8s.io/klog/v2 v2.40.1 // indirect
+	k8s.io/klog/v2 v2.40.1
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
