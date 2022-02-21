@@ -17,15 +17,13 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: quay.io/markd/mutatewh:v5
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/xphyr/mwhdemo:latest
+          imagePullPolicy: Always
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
           - -tlsCertFile=/etc/webhook/certs/tls.crt
           - -tlsKeyFile=/etc/webhook/certs/tls.key
-          - -alsologtostderr
-          - -v=4
-          - 2>&1
+          - -port=8443
           ports:
           - name: https
             containerPort: 8443
