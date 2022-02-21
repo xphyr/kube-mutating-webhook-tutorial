@@ -1,23 +1,23 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: wookie-test
-  namespace: test-mutate
+  name: portunus-test
+  namespace: portunus-mutate
   labels:
-    app: wookie-test
+    app: portunus-test
   annotations:
-    sidecar-injector-webhook.morven.me/inject: "yes"
+    sidecar-injector-webhook.xphyr.net/inject: "yes"
 spec:
   restartPolicy: Always
   serviceAccountName: default
   containers:
     - resources: {}
       terminationMessagePath: /dev/termination-log
-      name: wookie-test
+      name: portunus-test
       ports:
         - containerPort: 8080
           protocol: TCP
       imagePullPolicy: Always
       image: >-
-        quay.io/bjarvis/versioned-hello@sha256:834d5eb861cf528ff77388cd99132c426bcaea41d660048191c88e7c0a08fcb4
+        quay.io/xphyr/portunus:latest
   serviceAccount: default
