@@ -8,13 +8,15 @@ This tutorial shows how to build and deploy a [MutatingAdmissionWebhook](https:/
 
 First off Credit where Credit is due. This repo is a fork of https://github.com/morvencao/kube-mutating-webhook-tutorial which has been updated to work with more modern releases of Kubernetes, as well as additional information on how to deploy this for OpenShift. Thanks to [morvencao](https://github.com/morvencao) for his original work on this. See [References](#references) for additional information and inspiration for this work.
 
+NOTE that one of the biggest changes with this version of the Webhook Sidecar Injector is that it has been updated to work with admission v1, and dropped support for v1beta1.
+
 ## Prerequisites
 
 - [git](https://git-scm.com/downloads)
 - [go](https://golang.org/dl/) version v1.12+
 - [docker](https://docs.docker.com/install/) version 17.03+
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) version v1.11.3+
-- Access to a Kubernetes v1.11.3+ cluster with the `admissionregistration.k8s.io/v1beta1` API enabled. Verify that by the following command:
+- [oc](https://kubernetes.io/docs/tasks/tools/install-kubectl/) version v1.11.3+
+- Access to an OpenShift 4.9+ cluster with the `admissionregistration.k8s.io/v1` API enabled. Verify that by the following command:
 
 ```
 kubectl api-versions | grep admissionregistration.k8s.io
@@ -22,7 +24,6 @@ kubectl api-versions | grep admissionregistration.k8s.io
 The result should be:
 ```
 admissionregistration.k8s.io/v1
-admissionregistration.k8s.io/v1beta1
 ```
 
 > Note: In addition, the `MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers should be added and listed in the correct order in the admission-control flag of kube-apiserver.

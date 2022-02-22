@@ -1,21 +1,3 @@
-##
-## Build
-##
-FROM golang:1.17-buster AS build
-
-WORKDIR /app
-
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
-
-COPY cmd/*.go ./
-
-RUN go build -o /mwh-tutorial
-
-##
-## Deploy
-##
 FROM gcr.io/distroless/base-debian10
 
 # set environment variables
@@ -25,7 +7,7 @@ ENV SIDECAR_INJECTOR=/usr/local/bin/sidecar-injector \
 
 WORKDIR /
 
-COPY --from=build /mwh-tutorial /mwh-tutorial
+COPY build/_output/linux/bin/mwh-tutorial /mwh-tutorial
 
 EXPOSE 8080
 

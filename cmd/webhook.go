@@ -10,7 +10,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	admissionv1 "k8s.io/api/admission/v1"
-	v1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,9 +21,6 @@ var (
 	runtimeScheme = runtime.NewScheme()
 	codecs        = serializer.NewCodecFactory(runtimeScheme)
 	deserializer  = codecs.UniversalDeserializer()
-
-	// (https://github.com/kubernetes/kubernetes/issues/57982)
-	defaulter = runtime.ObjectDefaulter(runtimeScheme)
 )
 
 var ignoredNamespaces = []string{
@@ -64,19 +60,6 @@ type patchOperation struct {
 func init() {
 	_ = corev1.AddToScheme(runtimeScheme)
 	_ = admissionv1.AddToScheme(runtimeScheme)
-	// defaulting with webhooks:
-	// https://github.com/kubernetes/kubernetes/issues/57982
-	_ = v1.AddToScheme(runtimeScheme)
-}
-
-// (https://github.com/kubernetes/kubernetes/issues/57982)
-func applyDefaultsWorkaround(containers []corev1.Container, volumes []corev1.Volume) {
-	defaulter.Default(&corev1.Pod{
-		Spec: corev1.PodSpec{
-			Containers: containers,
-			Volumes:    volumes,
-		},
-	})
 }
 
 func loadConfig(configFile string) (*Config, error) {
@@ -94,9 +77,9 @@ func loadConfig(configFile string) (*Config, error) {
 	return &cfg, nil
 }
 
-// Check whether the target resoured need to be mutated
+// Check whether the target resource need to be mutated
 func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
-	// skip special kubernete system namespaces
+	// skip special kubernetes system namespaces
 	for _, namespace := range ignoredList {
 		if metadata.Namespace == namespace {
 			klog.Infof("Skip mutation for %v for it's in special namespace:%v", metadata.Name, metadata.Namespace)
@@ -192,7 +175,7 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	return patch
 }
 
-// create mutation patch for resoures
+// create mutation patch for resources
 func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
 
@@ -227,8 +210,6 @@ func (whsvr *WebhookServer) mutate(ar *admissionv1.AdmissionReview) *admissionv1
 		}
 	}
 
-	// Workaround: https://github.com/kubernetes/kubernetes/issues/57982
-	applyDefaultsWorkaround(whsvr.sidecarConfig.Containers, whsvr.sidecarConfig.Volumes)
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
 	patchBytes, err := createPatch(&pod, whsvr.sidecarConfig, annotations)
 	if err != nil {
@@ -291,12 +272,6 @@ func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
 			Kind:       "AdmissionReview",
 			APIVersion: "admission.k8s.io/v1",
 		},
-		// Response: &admission.AdmissionResponse{
-		//	UID:       review.Request.UID,
-		//	Allowed:   result.Allowed,
-		//	Result:    &meta.Status{Message: result.Msg},
-		//	PatchType: &patchType,
-		//},
 	}
 
 	if admissionResponse != nil {

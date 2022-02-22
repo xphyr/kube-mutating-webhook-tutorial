@@ -52,7 +52,7 @@ jobs:
         image: mwhdemo
         tags: latest ${{ github.sha }}
         containerfiles: |
-          ./Dockerfile.multistage
+          ./build/Dockerfile.multistage
 
     - name: Podman Login GHCR
       uses: redhat-actions/podman-login@v1
