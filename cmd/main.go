@@ -37,7 +37,7 @@ func main() {
 		sidecarConfig: sidecarConfig,
 		server: &http.Server{
 			Addr:      fmt.Sprintf(":%v", parameters.port),
-			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
+			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12},
 		},
 	}
 
