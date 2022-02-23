@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: portunus      
+spec:
+  selector:                  
+    app: portunus-test
+  ports:
+  - name: portunus-webport
+    port: 8080              
+    protocol: TCP
+    targetPort: 8080

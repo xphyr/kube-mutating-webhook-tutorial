@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sidecar-injector-webhook-deployment
-  namespace: sidecar-injector
   labels:
     app: sidecar-injector
 spec:
@@ -15,6 +14,7 @@ spec:
       labels:
         app: sidecar-injector
     spec:
+      serviceAccountName: mutator
       containers:
         - name: sidecar-injector
           image: ghcr.io/xphyr/mwhdemo:latest

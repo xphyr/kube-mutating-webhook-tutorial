@@ -2,11 +2,10 @@ kind: Pod
 apiVersion: v1
 metadata:
   name: portunus-test
-  namespace: portunus-mutate
   labels:
     app: portunus-test
-  annotations:
-    sidecar-injector-webhook.xphyr.net/inject: "yes"
+  #annotations:
+  #  sidecar-injector-webhook.xphyr.net/inject: "yes"
 spec:
   restartPolicy: Always
   serviceAccountName: default

@@ -19,71 +19,101 @@ NOTE that one of the biggest changes with this version of the Webhook Sidecar In
 - Access to an OpenShift 4.9+ cluster with the `admissionregistration.k8s.io/v1` API enabled. Verify that by the following command:
 
 ```
-kubectl api-versions | grep admissionregistration.k8s.io
+oc api-versions | grep admissionregistration.k8s.io
 ```
 The result should be:
 ```
 admissionregistration.k8s.io/v1
 ```
 
-> Note: In addition, the `MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers should be added and listed in the correct order in the admission-control flag of kube-apiserver.
+## Building in a Container
 
-## Build
+This project is set up to allow building the application inside a container so yo do not need to have the Go toolchain installed. You can use Podman or Docker to build the container image. In this blog post we will be using Podman.
 
-1. Build binary
+Start by checking out the code from github:
 
-```
-# make build
-```
-
-2. Build docker image
-   
-```
-# make build-image
-```
-
-3. push docker image
-
-```
-# make push-image
+```shell
+$ git clone https://github.com/xphyr/kube-mutating-webhook-tutorial.git
+Cloning into 'kube-mutating-webhook-tutorial'...
+remote: Enumerating objects: 250, done.
+remote: Counting objects: 100% (79/79), done.
+remote: Compressing objects: 100% (48/48), done.
+remote: Total 250 (delta 30), reused 65 (delta 23), pack-reused 171
+Receiving objects: 100% (250/250), 242.13 KiB | 1.24 MiB/s, done.
+Resolving deltas: 100% (114/114), done.
+$ cd kube-mutating-webhook-tutorial
 ```
 
-> Note: log into the docker registry before pushing the image.
+With the code cloned locally, we can build the application using containers. We will be using a "multistage" Dockerfile that runs the build for our application in one container, and then uses the results from the first container to populate the second container. Additional information on running a multistage Dockerfile can be found here: [Build your Go image](https://docs.docker.com/language/golang/build-images/) Run the following command to build our container:
+
+```shell
+$ podman build -f Dockerfile.multistage -t mwhexample:latest .
+[1/2] STEP 1/7: FROM golang:1.17-buster AS build
+[1/2] STEP 2/7: WORKDIR /app
+--> Using cache 400ea9b25da7730b8cc40d317b6274d898ec5e68a94f9472cdacaf9042675716
+--> 400ea9b25da
+[1/2] STEP 3/7: COPY go.mod ./
+...
+[1/2] STEP 7/7: RUN go build -o /mwh-tutorial
+--> 107ce1573f1
+[2/2] STEP 1/7: FROM gcr.io/distroless/base-debian10
+[2/2] STEP 2/7: ENV SIDECAR_INJECTOR=/usr/local/bin/sidecar-injector   USER_UID=1001   USER_NAME=sidecar-injector
+--> Using cache b520ffbe03b36eb9a338393f8d907c568e780d15217fbea40e7218260cacc28e
+--> b520ffbe03b
+...
+[2/2] STEP 7/7: ENTRYPOINT ["/mwh-tutorial"]
+[2/2] COMMIT mwhexample:latest
+--> 19616f6fc07
+Successfully tagged localhost/mwhexample:latest
+19616f6fc079831ab7f469a4906bc74f73db8a7136ba0975f08ce5ce77111eaa
+```
+
+## Building Locally
+
+You can also build the code locally on your machine without the use of containers.
+
+```shell
+$ go build -o build/_output/linux/bin/mwh-tutorial ./cmd/
+$ podman build -f build/Dockerfile -t mwhexample:latest .
+```
+
+## Push Containerimage to Registry
+
+Once the container is built, you will need to publish the container image to an image repository. Your steps may vary based on your particular container registry, in the example below we will push to quay.io.
+
+```shell
+$ podman tag mwhexample:latest quay.io/xphyr/mwhexample:latest
+$ podman login quay.io
+Authenticating with existing credentials for quay.io
+Existing credentials are valid. Already logged in to quay.io
+$ podman push quay.io/xphyr/mwhexample:latest
+```
+
+Our mutating webhook application is now ready for deployment.
+
+## Deployment
+
+Now that we have a container image to work with, we can deploy the Mutating Webhook. In an upstream Kubernetes cluster we would now need to create a x509 certificate to handle authentication within the cluster. However we are running OpenShift, and OpenShift can handle this for us using the "service.beta.openshift.io/inject-cabundle: "true"" annotation and leverage the Kubernetes APIservice.
 
 ## Deploy
 
-1. Create namespace `sidecar-injector` in which the sidecar injector webhook is deployed:
+Now that we have a container image to work with, we can deploy the Mutating Webhook. In an upstream Kubernetes cluster we would now need to create a x509 certificate to handle authentication within the cluster. However we are running OpenShift, and OpenShift can handle this for us using the "service.beta.openshift.io/inject-cabundle: "true"" annotation and leverage the Kubernetes APIservice.
 
-```
-# kubectl create ns sidecar-injector
-```
+To start, we will create a new project called "sidecar-injector" to install our mutating webhook into:
 
-2. Create a signed cert/key pair and store it in a Kubernetes `secret` that will be consumed by sidecar injector deployment:
-
-```
-# ./deploy/webhook-create-signed-cert.sh \
-    --service sidecar-injector-webhook-svc \
-    --secret sidecar-injector-webhook-certs \
-    --namespace sidecar-injector
-```
-
-3. Patch the `MutatingWebhookConfiguration` by set `caBundle` with correct value from Kubernetes cluster:
-
-```
-# cat deploy/mutatingwebhook.yaml | \
-    deploy/webhook-patch-ca-bundle.sh > \
-    deploy/mutatingwebhook-ca-bundle.yaml
+```shell
+$ oc login
+$ oc new-project sidecar-injector
+Now using project "sidecar-injector" on server "https://api.ocp49.xphyrlab.net:6443".
+$ oc create -f deploy/serviceaccount.yaml
+$ oc auth reconcile -f deploy/rbac.yaml
+$ oc create -f deploy/service.yaml
+$ oc create -f deploy/configmap.yaml
+$ oc create -f deploy/deployment.yaml
+$ oc create -f deploy/apiservice.yaml
 ```
 
-4. Deploy resources:
 
-```
-# kubectl create -f deploy/nginxconfigmap.yaml
-# kubectl create -f deploy/configmap.yaml
-# kubectl create -f deploy/deployment.yaml
-# kubectl create -f deploy/service.yaml
-# kubectl create -f deploy/mutatingwebhook-ca-bundle.yaml
-```
 
 ## Verify
 
